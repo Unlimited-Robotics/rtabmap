@@ -577,8 +577,9 @@ std::map<int, Transform> OptimizerGTSAM::optimize(
 				UWARN("GTSAM exception caught (BRAYAN): %s\n Graph has %d edges and %d vertices", e.what(),
 						(int)edgeConstraints.size(),
 						(int)poses.size());
+				optimizedPoses.clear();
 				delete optimizer;
-				return std::map<int, Transform> optimizedPoses;
+				return optimizedPoses;
 			}
 
 			// early stop condition
