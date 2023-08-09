@@ -574,14 +574,10 @@ std::map<int, Transform> OptimizerGTSAM::optimize(
 			}
 			catch(gtsam::IndeterminantLinearSystemException & e)
 			{
-				UWARN("GTSAM exception caught: %s\n Graph has %d edges and %d vertices", e.what(),
+				UWARN("GTSAM exception caught (BRAYAN): %s\n Graph has %d edges and %d vertices", e.what(),
 						(int)edgeConstraints.size(),
 						(int)poses.size());
 				delete optimizer;
-				// return optimizedPoses;
-				UWARN("!!!!!!!-------!!!!!!!");
-				UWARN("!!!!!!! EL BRAYAN !!!!!!!");
-				UWARN("!!!!!!!-------!!!!!!!");
 				return std::map<int, Transform> optimizedPoses;
 			}
 
