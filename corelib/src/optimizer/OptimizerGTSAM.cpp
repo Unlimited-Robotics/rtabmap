@@ -578,7 +578,11 @@ std::map<int, Transform> OptimizerGTSAM::optimize(
 						(int)edgeConstraints.size(),
 						(int)poses.size());
 				delete optimizer;
-				return optimizedPoses;
+				// return optimizedPoses;
+				UWARN("!!!!!!!-------!!!!!!!");
+				UWARN("!!!!!!! EL BRAYAN !!!!!!!");
+				UWARN("!!!!!!!-------!!!!!!!");
+				return std::map<int, Transform> optimizedPoses;
 			}
 
 			// early stop condition
