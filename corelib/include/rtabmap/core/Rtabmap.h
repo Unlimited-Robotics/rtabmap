@@ -244,6 +244,11 @@ public:
 	std::pair<int, float> selectHypothesis(const std::map<int, float> & posterior,
 											const std::map<int, float> & likelihood) const;
 
+	bool isDetectingMarkers();
+	double getOptimizationMaxError() {return _optimizationMaxError;};
+	int getDetectedMarkers() {return _detected_markers;};
+	int getAcceptedMarkers() {return _accepted_markers;};
+
 private:
 	void optimizeCurrentMap(int id,
 			bool lookInDatabase,
@@ -384,6 +389,10 @@ private:
 	Transform _pathTransformToGoal;
 	int _pathStuckCount;
 	float _pathStuckDistance;
+
+	// Markers counting
+	int _detected_markers;
+	int _accepted_markers;
 
 #ifdef RTABMAP_PYTHON
 	PythonInterface * _python;

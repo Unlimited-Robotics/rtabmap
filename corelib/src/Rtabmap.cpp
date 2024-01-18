@@ -1128,6 +1128,12 @@ public:
 	float distance;
 };
 
+bool Rtabmap::isDetectingMarkers()
+{
+	return _memory->isDetectingMarkers();
+};
+
+
 //============================================================
 // MAIN LOOP
 //============================================================
@@ -2987,12 +2993,15 @@ bool Rtabmap::process(
 	// Landmark
 	//============================================================
 	std::map<int, std::set<int> > landmarksDetected; // <Landmark ID, list of nodes that saw this landmark>
+	_detected_markers = 0;
+	_accepted_markers = 0;
 	if(!signature->getLandmarks().empty())
 	{
 		bool hasGlobalLoopClosuresInOdomCache = !graph::filterLinks(_odomCacheConstraints, Link::kGlobalClosure, true).empty() || _loopClosureHypothesis.first != 0;
 		UDEBUG("hasGlobalLoopClosuresInOdomCache=%d", hasGlobalLoopClosuresInOdomCache?1:0);
 		for(std::map<int, Link>::const_iterator iter=signature->getLandmarks().begin(); iter!=signature->getLandmarks().end(); ++iter)
 		{
+			_detected_markers++;
 			if(uContains(_memory->getLandmarksIndex(), iter->first) &&
 					_memory->getLandmarksIndex().find(iter->first)->second.size()>1)
 			{
@@ -3018,6 +3027,8 @@ bool Rtabmap::process(
 			}
 		}
 	}
+
+	_accepted_markers = (int)(landmarksDetected.size());
 
 	//============================================================
 	// Add virtual links if a path is activated

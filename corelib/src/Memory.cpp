@@ -5342,7 +5342,6 @@ Signature * Memory::createSignature(const SensorData & inputData, const Transfor
 	Landmarks landmarks = data.landmarks();
 	if(_detectMarkers && !isIntermediateNode && !data.imageRaw().empty())
 	{
-		UDEBUG("Detecting markers...");
 		if(landmarks.empty())
 		{
 			std::vector<CameraModel> models = data.cameraModels();
