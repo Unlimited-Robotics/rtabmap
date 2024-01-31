@@ -249,6 +249,9 @@ public:
 	int getDetectedMarkers() {return _detected_markers;};
 	int getAcceptedMarkers() {return _accepted_markers;};
 
+	using ExternalRejectionCallback = std::function<bool(std::map<int, Transform>&)>;
+	void setExternalRejectionCallback(const ExternalRejectionCallback& callback) {externalRejectionCallback = callback;}
+
 private:
 	void optimizeCurrentMap(int id,
 			bool lookInDatabase,
@@ -393,6 +396,9 @@ private:
 	// Markers counting
 	int _detected_markers;
 	int _accepted_markers;
+
+	// External rejection
+	ExternalRejectionCallback externalRejectionCallback;
 
 #ifdef RTABMAP_PYTHON
 	PythonInterface * _python;

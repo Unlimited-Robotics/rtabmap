@@ -25,6 +25,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <iostream>
+
 #include "rtabmap/core/Rtabmap.h"
 #include "rtabmap/core/Version.h"
 #include "rtabmap/core/Features2d.h"
@@ -1144,6 +1146,8 @@ bool Rtabmap::process(
 {
 	return this->process(SensorData(image, id), Transform());
 }
+
+
 bool Rtabmap::process(
 			const SensorData & data,
 			Transform odomPose,
@@ -1166,6 +1170,8 @@ bool Rtabmap::process(
 	covariance.at<double>(5,5) = odomAngularVariance;
 	return process(data, odomPose, covariance, odomVelocity, externalStats);
 }
+
+// CKPprocess000
 bool Rtabmap::process(
 		const SensorData & data,
 		Transform odomPose,
@@ -1174,6 +1180,8 @@ bool Rtabmap::process(
 		const std::map<std::string, float> & externalStats)
 {
 	UDEBUG("");
+
+	std::cout << "ANALYSYS: CKPprocess000" << std::endl;
 
 	//============================================================
 	// Initialization
@@ -1224,9 +1232,11 @@ bool Rtabmap::process(
 
 	std::set<int> immunizedLocations;
 
+	// CKPprocess001
 	statistics_ = Statistics(); // reset
 	for(std::map<std::string, float>::const_iterator iter=externalStats.begin(); iter!=externalStats.end(); ++iter)
 	{
+		// std::cout << "ANALYSYS: CKPprocess001" << std::endl;
 		statistics_.addStatistic(iter->first, iter->second);
 	}
 
@@ -1246,8 +1256,10 @@ bool Rtabmap::process(
 	// If RGBD SLAM is enabled, a pose must be set.
 	//============================================================
 	bool fakeOdom = false;
+	// CKPprocess002
 	if(_rgbdSlamMode)
 	{
+		std::cout << "ANALYSYS: CKPprocess002" << std::endl;
 		if(!odomPose.isNull())
 		{
 			// this will make sure that all inverse operations will work!
@@ -1410,8 +1422,10 @@ bool Rtabmap::process(
 	// Memory Update : Location creation + Add to STM + Weight Update (Rehearsal)
 	//============================================================
 	ULOGGER_INFO("Updating memory...");
+	// CKPprocess003 CKPprocess004
 	if(_rgbdSlamMode)
 	{
+		std::cout << "ANALYSYS: CKPprocess003" << std::endl;
 		if(!_memory->update(data, odomPose, odomCovariance, odomVelocity, &statistics_))
 		{
 			return false;
@@ -1419,6 +1433,7 @@ bool Rtabmap::process(
 	}
 	else
 	{
+		std::cout << "ANALYSYS: CKPprocess004" << std::endl;
 		if(!_memory->update(data, Transform(), cv::Mat(), std::vector<float>(), &statistics_))
 		{
 			return false;
@@ -1427,8 +1442,10 @@ bool Rtabmap::process(
 
 	signature = _memory->getLastWorkingSignature();
 	_currentSessionHasGPS = _currentSessionHasGPS || signature->sensorData().gps().stamp() > 0.0;
+	// CKPprocess005
 	if(!signature)
 	{
+		std::cout << "ANALYSYS: CKPprocess005" << std::endl;
 		UFATAL("Not supposed to be here...last signature is null?!?");
 	}
 
@@ -1446,8 +1463,10 @@ bool Rtabmap::process(
 	bool addedNewLandmark = false;
 	float distanceToClosestNodeInTheGraph = 0;
 	float angleToClosestNodeInTheGraph = 0;
+	// CKPprocess006
 	if(_rgbdSlamMode)
 	{
+		std::cout << "ANALYSYS: CKPprocess006" << std::endl;
 		statistics_.addStatistic(Statistics::kMemoryOdometry_variance_lin(), odomCovariance.empty()?1.0f:(float)odomCovariance.at<double>(0,0));
 		statistics_.addStatistic(Statistics::kMemoryOdometry_variance_ang(), odomCovariance.empty()?1.0f:(float)odomCovariance.at<double>(5,5));
 
@@ -1874,8 +1893,17 @@ bool Rtabmap::process(
 	//============================================================
 	int previousId = signature->getLinks().size() && signature->getLinks().begin()->first!=signature->id()?signature->getLinks().begin()->first:0;
 	// Not a bad signature, not an intermediate node, not a small displacement unless the previous signature didn't have a loop closure, not too fast movement
-	if(!signature->isBadSignature() && signature->getWeight()>=0 && (!smallDisplacement || _memory->getLoopClosureLinks(previousId, false).size() == 0) && !tooFastMovement)
+	// CKPprocess007 CKPprocess008 CKPprocess009
+	if(
+		!signature->isBadSignature() && 
+		signature->getWeight()>=0 && 
+		(
+			!smallDisplacement || 
+			_memory->getLoopClosureLinks(previousId, false).size() == 0
+		) && 
+		!tooFastMovement)
 	{
+		std::cout << "ANALYSYS: CKPprocess007" << std::endl;
 		// If the working memory is empty, don't do the detection. It happens when it
 		// is the first time the detector is started (there needs some images to
 		// fill the short-time memory before a signature is added to the working memory).
@@ -2106,11 +2134,13 @@ bool Rtabmap::process(
 	}// !isBadSignature
 	else if(!signature->isBadSignature() && (smallDisplacement || tooFastMovement))
 	{
+		std::cout << "ANALYSYS: CKPprocess008" << std::endl;
 		_highestHypothesis = lastHighestHypothesis;
 		UDEBUG("smallDisplacement=%d tooFastMovement=%d", smallDisplacement?1:0, tooFastMovement?1:0);
 	}
 	else
 	{
+		std::cout << "ANALYSYS: CKPprocess009" << std::endl;
 		UDEBUG("Ignoring likelihood and loop closure hypotheses as current signature doesn't have enough visual features.");
 	}
 
@@ -2132,15 +2162,24 @@ bool Rtabmap::process(
 	int immunizedGlobally = 0;
 	int immunizedLocally = 0;
 	int maxLocalLocationsImmunized = 0;
+
+	// CKPprocess010
 	if(_maxTimeAllowed != 0 || _maxMemoryAllowed != 0)
 	{
+				std::cout << "ANALYSYS: CKPprocess010" << std::endl;
+
 		// with memory management, we have to immunize some nodes
 		maxLocalLocationsImmunized = _localImmunizationRatio * float(_memory->getWorkingMem().size());
 	}
+
 	// no need to do retrieval or immunization of locations if memory management
 	// is disabled and all nodes are in WM
+
+	// CKPprocess011
 	if(!(_memory->allNodesInWM() && maxLocalLocationsImmunized == 0))
 	{
+				std::cout << "ANALYSYS: CKPprocess011" << std::endl;
+
 		if(retrievalId > 0)
 		{
 			//Load neighbors
@@ -2278,12 +2317,17 @@ bool Rtabmap::process(
 	//============================================================
 	// RETRIEVAL 2/3 : Update planned path and get next nodes to retrieve
 	//============================================================
+
+	// CKPprocess012
 	std::list<int> retrievalLocalIds;
 	if(_rgbdSlamMode)
 	{
+		std::cout << "ANALYSYS: CKPprocess012" << std::endl;
+
 		// Priority on locations on the planned path
 		if(_path.size())
 		{
+			std::cout << "ANALYSYS: CKPprocess012.1" << std::endl;
 			updateGoalIndex();
 
 			float distanceSoFar = 0.0f;
@@ -2324,6 +2368,7 @@ bool Rtabmap::process(
 
 		if(!(_memory->allNodesInWM() && maxLocalLocationsImmunized == 0))
 		{
+			std::cout << "ANALYSYS: CKPprocess012.2" << std::endl;
 			// immunize the path from the nearest local location to the current location
 			if(immunizedLocally < maxLocalLocationsImmunized &&
 				_memory->isIncremental()) // Can only work in mapping mode
@@ -2480,8 +2525,10 @@ bool Rtabmap::process(
 		//============================================================
 		// RETRIEVAL 3/3 : Load signatures from the database
 		//============================================================
+
 		if(reactivatedIds.size())
 		{
+			std::cout << "ANALYSYS: CKPprocess012.3" << std::endl;
 			// Not important if the loop closure hypothesis don't have all its neighbors loaded,
 			// only a loop closure link is added...
 			signaturesRetrieved = _memory->reactivateSignatures(
@@ -2529,11 +2576,13 @@ bool Rtabmap::process(
 	int localScanPathsChecked = 0;
 	int loopIdSuppressedByProximity = 0;
 
+	// CKPprocess013
 	if(_proximityBySpace &&
 	   _localRadius > 0 &&
 	   _rgbdSlamMode &&
 	   signature->getWeight() >= 0) // not an intermediate node
 	{
+		std::cout << "ANALYSYS: CKPprocess013" << std::endl;
 		if(_startNewMapOnLoopClosure &&
 			_memory->getWorkingMem().size()>=2 && // must have an old map (+1 virtual place)
 			_localizationCovariance.empty() && // if we didn't localize yet
@@ -2922,8 +2971,11 @@ bool Rtabmap::process(
 	// Global loop closure detection
 	// (updated: place this after retrieval to be sure that neighbors of the loop closure are in RAM)
 	//=============================================================
+
+	// CKPprocess014
 	if(_loopClosureHypothesis.first>0)
 	{
+		std::cout << "ANALYSYS: CKPprocess014" << std::endl;
 		if(loopIdSuppressedByProximity==0)
 		{
 			//Compute transform if metric data are present
@@ -2995,8 +3047,11 @@ bool Rtabmap::process(
 	std::map<int, std::set<int> > landmarksDetected; // <Landmark ID, list of nodes that saw this landmark>
 	_detected_markers = 0;
 	_accepted_markers = 0;
+
+	// CKPprocess015
 	if(!signature->getLandmarks().empty())
 	{
+		std::cout << "ANALYSYS: CKPprocess015" << std::endl;
 		bool hasGlobalLoopClosuresInOdomCache = !graph::filterLinks(_odomCacheConstraints, Link::kGlobalClosure, true).empty() || _loopClosureHypothesis.first != 0;
 		UDEBUG("hasGlobalLoopClosuresInOdomCache=%d", hasGlobalLoopClosuresInOdomCache?1:0);
 		for(std::map<int, Link>::const_iterator iter=signature->getLandmarks().begin(); iter!=signature->getLandmarks().end(); ++iter)
@@ -3033,8 +3088,11 @@ bool Rtabmap::process(
 	//============================================================
 	// Add virtual links if a path is activated
 	//============================================================
+
+	// CKPprocess016
 	if(_path.size())
 	{
+		std::cout << "ANALYSYS: CKPprocess016" << std::endl;
 		// Add a virtual loop closure link to keep the path linked to local map
 		if( signature->id() != _path[_pathCurrentIndex].first &&
 			!signature->hasLink(_path[_pathCurrentIndex].first))
@@ -3081,22 +3139,37 @@ bool Rtabmap::process(
 	UDEBUG("Retrieved: %d", (int)signaturesRetrieved.size());
 	UDEBUG("Not self ref links: %d", (int)graph::filterLinks(signature->getLinks(), Link::kSelfRefLink).size());
 
-	if(_rgbdSlamMode
-		&&
-		(_loopClosureHypothesis.first>0 ||
-	     lastProximitySpaceClosureId>0 || // can be different map of the current one
-	     statistics_.reducedIds().size() ||
-		 (signature->hasLink(signature->id(), Link::kPosePrior) && !_graphOptimizer->priorsIgnored()) || // prior edge
-		 (signature->hasLink(signature->id(), Link::kGravity) && _graphOptimizer->gravitySigma()>0.0f && (!_memory->isOdomGravityUsed() || neighborLinkRefined)) || // gravity edge
-	     proximityDetectionsInTimeFound>0 ||
-		 !landmarksDetected.empty() ||
-		 signaturesRetrieved.size()) // can be different map of the current one
-		 &&
-		 (_memory->isIncremental() ||
-		  // In localization mode, the new node should be linked to another node or a landmark already in the working memory
-		  graph::filterLinks(graph::filterLinks(signature->getLinks(), Link::kVirtualClosure), Link::kSelfRefLink).size() ||
-		  !landmarksDetected.empty()))
+	// CKPprocess017
+	if(
+		_rgbdSlamMode &&
+		(
+			_loopClosureHypothesis.first>0 ||
+	     	lastProximitySpaceClosureId>0 || // can be different map of the current one
+	     	statistics_.reducedIds().size() ||
+		 	(
+				signature->hasLink(signature->id(), Link::kPosePrior) && 
+				!_graphOptimizer->priorsIgnored()
+			) || // prior edge
+		 	(
+				signature->hasLink(signature->id(), Link::kGravity) && 
+				_graphOptimizer->gravitySigma()>0.0f && 
+				(
+					!_memory->isOdomGravityUsed() 
+					|| neighborLinkRefined
+					)
+				) || // gravity edge
+	     	proximityDetectionsInTimeFound>0 ||
+		 	!landmarksDetected.empty() ||
+		 	signaturesRetrieved.size()
+		) && // can be different map of the current one
+		(
+			_memory->isIncremental() || // In localization mode, the new node should be linked to another node or a landmark already in the working memory
+		  	graph::filterLinks(graph::filterLinks(signature->getLinks(), Link::kVirtualClosure), Link::kSelfRefLink).size() ||
+		  	!landmarksDetected.empty()
+		)
+	)
 	{
+		std::cout << "ANALYSYS: CKPprocess017" << std::endl;
 		UASSERT(uContains(_optimizedPoses, signature->id()));
 
 		//used in localization mode: filter virtual links
@@ -3648,6 +3721,12 @@ bool Rtabmap::process(
 				}
 			}
 
+			std::cout << "ANALYSYS: CKPprocess017.1" << std::endl;
+
+			if(!rejectLocalization && externalRejectionCallback){
+				rejectLocalization = externalRejectionCallback(_optimizedPoses);
+			}
+
 			if(rejectLocalization)
 			{
 				_loopClosureHypothesis.first = 0;
@@ -3677,6 +3756,9 @@ bool Rtabmap::process(
 			// Check added loop closures have broken the graph
 			// (in case of wrong loop closures).
 			bool updateConstraints = true;
+
+			std::cout << "ANALYSYS: CKPprocess017.2" << std::endl;
+
 			if(poses.empty())
 			{
 				UWARN("Graph optimization failed! Rejecting last loop closures added.");
@@ -3789,6 +3871,8 @@ bool Rtabmap::process(
 					}
 				}
 
+				std::cout << "ANALYSYS: CKPprocess017.3" << std::endl;
+
 				if(reject)
 				{
 					for(std::list<std::pair<int, int> >::iterator iter=loopClosureLinksAdded.begin(); iter!=loopClosureLinksAdded.end(); ++iter)
@@ -3812,6 +3896,8 @@ bool Rtabmap::process(
 				_localizationCovariance = covariance;
 			}
 		}
+
+
 
 		// Update map correction, it should be identify when optimizing from the last node
 		UASSERT(_optimizedPoses.find(signature->id()) != _optimizedPoses.end());
@@ -3854,8 +3940,11 @@ bool Rtabmap::process(
 	}
 	int newLocId = _loopClosureHypothesis.first>0?_loopClosureHypothesis.first:lastProximitySpaceClosureId>0?lastProximitySpaceClosureId:0;
 	_lastLocalizationNodeId = newLocId!=0?newLocId:_lastLocalizationNodeId;
+
+	// CKPprocess018
 	if(newLocId==0 && !landmarksDetected.empty())
 	{
+		std::cout << "ANALYSYS: CKPprocess018" << std::endl;
 		std::map<int, std::set<int> >::const_iterator iter = _memory->getLandmarksIndex().find(landmarksDetected.begin()->first);
 		if(iter!=_memory->getLandmarksIndex().end())
 		{
@@ -3880,16 +3969,21 @@ bool Rtabmap::process(
 	float rehearsalValue = uValue(statistics_.data(), Statistics::kMemoryRehearsal_sim(), 0.0f);
 	int rehearsalMaxId = (int)uValue(statistics_.data(), Statistics::kMemoryRehearsal_merged(), 0.0f);
 	sLoop = _memory->getSignature(_loopClosureHypothesis.first?_loopClosureHypothesis.first:lastProximitySpaceClosureId?lastProximitySpaceClosureId:_highestHypothesis.first);
+	
+	// CKPprocess019
 	if(sLoop)
 	{
+		std::cout << "ANALYSYS: CKPprocess019" << std::endl;
 		lcHypothesisReactivated = sLoop->isSaved()?1.0f:0.0f;
 	}
 	dictionarySize = (int)_memory->getVWDictionary()->getVisualWords().size();
 	refWordsCount = (int)signature->getWords().size();
 	refUniqueWordsCount = (int)uUniqueKeys(signature->getWords()).size();
 
+	// CKPprocess020
 	if(_graphOptimizer->isSlam2d() && _localizationCovariance.total() == 36)
 	{
+		std::cout << "ANALYSYS: CKPprocess020" << std::endl;
 		// set very small
 		_localizationCovariance.at<double>(2,2) = Registration::COVARIANCE_LINEAR_EPSILON;
 		_localizationCovariance.at<double>(3,3) = Registration::COVARIANCE_ANGULAR_EPSILON;
@@ -3901,8 +3995,10 @@ bool Rtabmap::process(
 	int loopId = _loopClosureHypothesis.first>0?_loopClosureHypothesis.first:lastProximitySpaceClosureId;
 
 	// prepare statistics
+	// CKPprocess021
 	if(_loopClosureHypothesis.first || _publishStats)
 	{
+		std::cout << "ANALYSYS: CKPprocess021" << std::endl;
 		ULOGGER_INFO("sending stats...");
 		statistics_.setRefImageId(_memory->getLastSignatureId()); // Use last id from Memory (in case of rehearsal)
 		statistics_.setRefImageMapId(signature->mapId());
@@ -4120,31 +4216,46 @@ bool Rtabmap::process(
 
 	Signature lastSignatureData = *signature;
 	Transform lastSignatureLocalizedPose;
+
+	// CKPprocess022
 	if(_optimizedPoses.find(signature->id()) != _optimizedPoses.end())
 	{
+		std::cout << "ANALYSYS: CKPprocess022" << std::endl;
 		lastSignatureLocalizedPose = _optimizedPoses.at(signature->id());
 	}
+
+	// CKPprocess023
 	if(!_publishLastSignatureData)
 	{
+		std::cout << "ANALYSYS: CKPprocess023" << std::endl;
 		lastSignatureData.sensorData().clearCompressedData();
 		lastSignatureData.sensorData().clearRawData();
 	}
+
+	// CKPprocess024
 	if(!_rawDataKept)
 	{
+		std::cout << "ANALYSYS: CKPprocess024" << std::endl;
 		_memory->removeRawData(signature->id(), true, !_neighborLinkRefining && !_proximityBySpace, true);
 	}
 
 	// Localization mode and saving localization data: save odometry covariance in a prior link
 	// so that DBReader can republish the covariance of localization data
+	
+	// CKPprocess025
 	if(!_memory->isIncremental() && _memory->isLocalizationDataSaved() && !odomCovariance.empty())
 	{
+		std::cout << "ANALYSYS: CKPprocess025" << std::endl;
 		_memory->addLink(Link(signature->id(), signature->id(), Link::kPosePrior, odomPose, odomCovariance.inv()));
 	}
 
 	// remove last signature if the memory is not incremental or is a bad signature (if bad signatures are ignored)
 	int signatureRemoved = _memory->cleanup();
+
+	// CKPprocess026
 	if(signatureRemoved)
 	{
+		std::cout << "ANALYSYS: CKPprocess026" << std::endl;
 		signaturesRemoved.push_back(signatureRemoved);
 	}
 
@@ -4152,8 +4263,11 @@ bool Rtabmap::process(
 	// Used when rtabmap is first started, it will wait a
 	// global loop closure detection before starting the new map,
 	// otherwise it deletes the current node.
+
+	// CKPprocess027 CKPprocess028
 	if(signatureRemoved != lastSignatureData.id())
 	{
+		std::cout << "ANALYSYS: CKPprocess027" << std::endl;
 		if(_startNewMapOnLoopClosure &&
 			_memory->isIncremental() &&              // only in mapping mode
 			graph::filterLinks(signature->getLinks(), Link::kSelfRefLink).size() == 0 &&      // alone in the current map
@@ -4199,6 +4313,7 @@ bool Rtabmap::process(
 			!delayedLocalization &&
 			(rejectedLandmark || landmarksDetected.empty()))
 	{
+		std::cout << "ANALYSYS: CKPprocess028" << std::endl;
 		_odomCachePoses.erase(signatureRemoved);
 		for(std::multimap<int, Link>::iterator iter=_odomCacheConstraints.begin(); iter!=_odomCacheConstraints.end();)
 		{
@@ -4229,11 +4344,14 @@ bool Rtabmap::process(
 	// entry (from X oldest) from the short term memory to the
 	// long term memory.
 	//============================================================
+	
+	//CKPprocess029 
 	double totalTime = timerTotal.ticks();
 	ULOGGER_INFO("Total time processing = %fs...", totalTime);
 	if((_maxTimeAllowed != 0 && totalTime*1000>_maxTimeAllowed) ||
 		(_maxMemoryAllowed != 0 && _memory->getWorkingMem().size() > _maxMemoryAllowed))
 	{
+		std::cout << "ANALYSYS: CKPprocess029" << std::endl;
 		ULOGGER_INFO("Removing old signatures because time limit is reached %f>%f or memory is reached %d>%d...", totalTime*1000, _maxTimeAllowed, _memory->getWorkingMem().size(), _maxMemoryAllowed);
 		immunizedLocations.insert(_lastLocalizationNodeId); // keep the latest localization in working memory
 		std::list<int> transferred = _memory->forget(immunizedLocations);
@@ -4246,14 +4364,20 @@ bool Rtabmap::process(
 	_lastProcessTime = totalTime;
 
 	// cleanup cached gps values
+
+	// CKPprocess030
 	for(std::list<int>::iterator iter=signaturesRemoved.begin(); iter!=signaturesRemoved.end() && _gpsGeocentricCache.size(); ++iter)
 	{
+		std::cout << "ANALYSYS: CKPprocess030" << std::endl;
 		_gpsGeocentricCache.erase(*iter);
 	}
 
 	//Remove optimized poses from signatures transferred
+	
+	// CKPprocess031
 	if(signaturesRemoved.size() && (_optimizedPoses.size() || _constraints.size()))
 	{
+		std::cout << "ANALYSYS: CKPprocess031" << std::endl;
 		//refresh the local map because some transferred nodes may have broken the tree
 		int id = 0;
 		if(!_memory->isIncremental() && (_lastLocalizationNodeId > 0 || _path.size()))
@@ -4358,9 +4482,13 @@ bool Rtabmap::process(
 			_constraints.clear();
 		}
 	}
+	
 	// just some verifications to make sure that planning path is still in the local map!
+	
+	// CKPprocess032
 	if(_path.size())
 	{
+		std::cout << "ANALYSYS: CKPprocess032" << std::endl;
 		UASSERT(_pathCurrentIndex < _path.size());
 		UASSERT(_pathGoalIndex < _path.size());
 		UASSERT_MSG(uContains(_optimizedPoses, _path.at(_pathCurrentIndex).first), uFormat("local map size=%d, id=%d", (int)_optimizedPoses.size(), _path.at(_pathCurrentIndex).first).c_str());
@@ -4375,8 +4503,11 @@ bool Rtabmap::process(
 	// Finalize statistics and log files
 	//==============================================================
 	int localGraphSize = 0;
+
+	// CKPprocess033
 	if(_publishStats)
 	{
+		std::cout << "ANALYSYS: CKPprocess033" << std::endl;
 		statistics_.addStatistic(Statistics::kTimingStatistics_creation(), timeStatsCreation*1000);
 		statistics_.addStatistic(Statistics::kTimingTotal(), totalTime*1000);
 		statistics_.addStatistic(Statistics::kTimingForgetting(), timeRealTimeLimitReachedProcess*1000);
@@ -4555,8 +4686,11 @@ bool Rtabmap::process(
 	}
 
 	//Save statistics to database
+
+	// CKPprocess034
 	if(_memory->isIncremental() || _memory->isLocalizationDataSaved())
 	{
+		std::cout << "ANALYSYS: CKPprocess034" << std::endl;
 		_memory->saveStatistics(statistics_, _saveWMState);
 	}
 
@@ -4566,8 +4700,11 @@ bool Rtabmap::process(
 
 	// Log info...
 	// TODO : use a specific class which will handle the RtabmapEvent
+
+	// CKPprocess035
 	if(_foutFloat && _foutInt)
 	{
+		std::cout << "ANALYSYS: CKPprocess035" << std::endl;
 		UDEBUG("Logging...");
 		std::string logF = uFormat("%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f\n",
 									totalTime,
@@ -4639,8 +4776,11 @@ bool Rtabmap::process(
 	}
 	timeFinalizingStatistics = timer.ticks();
 	UDEBUG("End process, timeFinalizingStatistics=%fs", timeFinalizingStatistics);
+
+	// CKPprocess036
 	if(_publishStats)
 	{
+		std::cout << "ANALYSYS: CKPprocess036" << std::endl;
 		statistics_.addStatistic(Statistics::kTimingFinalizing_statistics(), timeFinalizingStatistics*1000);
 	}
 
